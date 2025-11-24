@@ -1,17 +1,22 @@
-#define _POSIX_C_SOURCE 200809L
+#define _POSIX_C_SOURCE 200809L     // We compiling with -std=c99
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h> // For isdigit
 
-// Helper function to perform division of a large number represented as a str,
-// by a small integer.
-// It modifies the number string in-place to be the quotient and returns the
-// remainder.
+/* Helper function to perform division of a large number represented as a str,
+ * by a small integer. 
+ *
+ * It modifies the number string in-place to be the quotient and returns the
+ * remainder.
+ */
 int divide_string_by_16(char* number_str) {
    int remainder = 0;
+   
+   /* Divide by 16 stripping the remainder off ea. sucessive quotient...*/
    for (int i = 0; number_str[i] != '\0'; ++i) {
+      // conv digit char to a digit...
       int digit = number_str[i] - '0';
       int value = remainder * 10 + digit;
       number_str[i] = (value / 16) + '0';
@@ -35,9 +40,14 @@ void strip_leading_zeros(char* str) {
  * @brief Converts an arbitrarily long decimal string to a hexadecimal string.
  *
  * @param decimal_str The null-terminated decimal string to convert.
+ *
+ * #define _POSIX_C_SOURCE 200809L
+ * 
+ * We're compiling with -std=c99
+ *
  * @return A newly allocated hex string (lowercase). The caller is responsible
- *         for freeing this memory. Returns NULL on failure.
- */
+ * for freeing this memory. Returns NULL on failure.
+ **/
 char* decimal_to_hex_string_bigint(const char* decimal_str) {
    if (decimal_str == NULL) {
       return NULL;
@@ -65,7 +75,6 @@ char* decimal_to_hex_string_bigint(const char* decimal_str) {
    char* temp_dec = strdup(decimal_str);
    if (temp_dec == NULL) {
       fprintf(stderr, "Error: Memory allocation failed.\n");
-    
       return NULL;
     }
 
@@ -85,9 +94,9 @@ char* decimal_to_hex_string_bigint(const char* decimal_str) {
 
        // Convert remainder (0-15) to a hex character
        if (remainder < 10) {
-           hex_str[hex_pos++] = remainder + '0';
+           hex_str[hex_pos++] = remainder + '0';      // 0-9 ascii 48-57 dec
        } else {
-           hex_str[hex_pos++] = remainder - 10 + 'a';
+           hex_str[hex_pos++] = remainder - 10 + 'a'; // a-f ascii 97-102 dec 
        }
     }
     hex_str[hex_pos] = '\0';
@@ -99,10 +108,8 @@ char* decimal_to_hex_string_bigint(const char* decimal_str) {
        hex_str[i] = hex_str[hex_pos - 1 - i];
        hex_str[hex_pos - 1 - i] = temp;
     }
-
     return hex_str;
 }
-
 
 // The format_hex_with_padding func remains the same as last correct version.
 char* format_hex_with_padding(const char* input_hex) {
@@ -168,6 +175,5 @@ int main(int argc, char *argv[]) {
       fprintf(stderr, "Error: Failed to format the hex string.\n");
       return 1;
    }
-
    return 0;
 }
