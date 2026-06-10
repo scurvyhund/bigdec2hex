@@ -41,10 +41,12 @@ The `size_t` subtraction `(total_hex_chars >> 2) - 1` at first appears to risk
 underflow to `SIZE_MAX`, but is safe because the `input_len == 0` early-return
 guard guarantees `total_hex_chars >= 4` before that line is reached.
 
-### Verified correct at 2^512
+### Verified correct to 2^512
 
-Tested three values at or near 2^512 (155-digit decimal strings) and confirmed
-output matches Python's `hex()` reference exactly.
+The test harness (`test-final-d2h.sh`) was updated from `[0, 2^394]` to
+`[0, 2^512]` and run for 10,000 random values — 10,000 passed, 0 failed.
+Results validated against Python's `hex()` reference. Correctness beyond
+2^512 is expected from the algorithm but has not been tested.
 
 ### Repository hygiene
 

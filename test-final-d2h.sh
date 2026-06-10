@@ -2,7 +2,7 @@
 # d2h Test Harness
 #
 # This script:
-# 1. Generates 10000 random integers from 0 to 2^256
+# 1. Generates 10000 random integers from 0 to 2^512
 # 2. Converts them to hex using d2h
 # 3. Validates by converting back to decimal using Python
 # 4. Reports pass/fail with colorful output
@@ -72,9 +72,9 @@ check_tool() {
     fi
 }
 
-# Generate a random number from 0 to 2^256
+# Generate a random number from 0 to 2^512
 generate_random_bigint() {
-    python3 -c "import random; random.seed($SEED + $1); print(random.randint(0, 2**394))"
+    python3 -c "import random; random.seed($SEED + $1); print(random.randint(0, 2**512))"
 }
 
 # Validate hex conversion
@@ -117,7 +117,7 @@ echo ""
 # Display test configuration
 echo -e "${MAGENTA}Test Configuration:${NC}"
 echo -e "  Tests:       ${CYAN}$TEST_COUNT${NC}"
-echo -e "  Range:       ${CYAN}0 to 2^256${NC}"
+echo -e "  Range:       ${CYAN}0 to 2^512${NC}"
 echo -e "  Seed:        ${CYAN}$SEED${NC}"
 echo -e "  Log file:    ${CYAN}$LOGFILE${NC}"
 echo -e "  Verbose:     ${CYAN}$([ $VERBOSE -eq 1 ] && echo 'Yes' || echo 'No')${NC}"
@@ -132,7 +132,7 @@ echo ""
 # Write log header
 {
     echo "d2h Test Results - $(date)"
-    echo "Configuration: $TEST_COUNT tests, range 0 to 2^256, seed $SEED"
+    echo "Configuration: $TEST_COUNT tests, range 0 to 2^512, seed $SEED"
     echo "=================================================="
     echo ""
 } > "$LOGFILE"
