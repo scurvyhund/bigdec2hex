@@ -1,0 +1,19 @@
+# build output
+final-d2h
+final-test
+test-loop
+wc
+
+# generated test logs
+test-d2h-*.log
+
+# personal / local files
+scott-email.docx
+qq
+code_journey/
+test-loop.c
+
+# misc
+*.png
+*.pdf
+tags

@@ -1,4 +1,13 @@
-#define _POSIX_C_SOURCE 200809L     // We compiling with -std=c99
+/* final-d2h.c                12.01.25                      jim adams   
+ *
+ * Last updated 12.28.25
+ *
+ * Uses string math to convert and display arbitrarily large decimal string 
+ * values in hex.
+ *
+ */
+
+#define _POSIX_C_SOURCE 200809L     // We're compiling with -std=c99
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,27 +46,34 @@ void strip_leading_zeros(char* str) {
 }
 
 /**
- * @brief Converts an arbitrarily long decimal string to a hexadecimal string.
+ * Converts an arbitrarily long decimal string to a hexadecimal string.
  *
- * @param decimal_str The null-terminated decimal string to convert.
+ * decimal_str The null-terminated decimal string to convert.
  *
  * #define _POSIX_C_SOURCE 200809L
  * 
- * We're compiling with -std=c99
+ * compiling with -std=c99
  *
- * @return A newly allocated hex string (lowercase). The caller is responsible
+ * returns a newly allocated hex string (lowercase). The caller is responsible
  * for freeing this memory. Returns NULL on failure.
  **/
+
 char* decimal_to_hex_string_bigint(const char* decimal_str) {
    if (decimal_str == NULL) {
       return NULL;
    }
 
+   if (decimal_str[0] == '\0') {
+      fprintf(stderr, "Error: Empty input string.\n");
+      return NULL;
+   }
+
    // Validate input: check if all characters are digits
    for(int i = 0; decimal_str[i] != '\0'; i++) {
-      if (!isdigit(decimal_str[i])) {
+      if (!isdigit((unsigned char)decimal_str[i])) {
          fprintf(stderr, "Error: Input contains non-digit characters: %s\n",\
                  decimal_str);
+  
          return NULL;
        }
    }
@@ -94,16 +110,16 @@ char* decimal_to_hex_string_bigint(const char* decimal_str) {
 
        // Convert remainder (0-15) to a hex character
        if (remainder < 10) {
-           hex_str[hex_pos++] = remainder + '0';      // 0-9 ascii 48-57 dec
+          hex_str[hex_pos++] = remainder + '0';      // 0-9 ascii 48-57 dec
        } else {
-           hex_str[hex_pos++] = remainder - 10 + 'a'; // a-f ascii 97-102 dec 
+          hex_str[hex_pos++] = remainder - 10 + 'a'; // a-f ascii 97-102 dec 
        }
     }
     hex_str[hex_pos] = '\0';
     free(temp_dec);
 
     // The hex string is generated in reverse order, so we need to reverse it.
-    for (int i = 0; i < hex_pos / 2; ++i) {
+    for (int i = 0; i < (hex_pos >> 1); ++i) {
        char temp = hex_str[i];
        hex_str[i] = hex_str[hex_pos - 1 - i];
        hex_str[hex_pos - 1 - i] = temp;
@@ -127,7 +143,7 @@ char* format_hex_with_padding(const char* input_hex) {
    size_t remainder = input_len % 4;
    size_t padding_needed = (remainder == 0) ? 0 : (4 - remainder);
    size_t total_hex_chars = input_len + padding_needed;
-   size_t num_spaces = (total_hex_chars / 4) - 1;
+   size_t num_spaces = (total_hex_chars >> 2) - 1;
    size_t visible_len = 6 + total_hex_chars + num_spaces + 1;
 
    char* formatted_str = (char*)malloc(visible_len + 1);
