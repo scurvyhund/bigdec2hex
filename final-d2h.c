@@ -22,9 +22,9 @@
  */
 int divide_string_by_16(char* number_str) {
    int remainder = 0;
-   
+
    /* Divide by 16 stripping the remainder off ea. sucessive quotient...*/
-   for (int i = 0; number_str[i] != '\0'; ++i) {
+   for (size_t i = 0; number_str[i] != '\0'; ++i) {
       // conv digit char to a digit...
       int digit = number_str[i] - '0';
       int value = remainder * 10 + digit;
@@ -36,7 +36,7 @@ int divide_string_by_16(char* number_str) {
 
 // Helper function to remove leading zeros from a string.
 void strip_leading_zeros(char* str) {
-   int i = 0;
+   size_t i = 0;
    while (str[i] == '0') {
       i++;
    }
@@ -69,7 +69,7 @@ char* decimal_to_hex_string_bigint(const char* decimal_str) {
    }
 
    // Validate input: check if all characters are digits
-   for(int i = 0; decimal_str[i] != '\0'; i++) {
+   for(size_t i = 0; decimal_str[i] != '\0'; i++) {
       if (!isdigit((unsigned char)decimal_str[i])) {
          fprintf(stderr, "Error: Input contains non-digit characters: %s\n",\
                  decimal_str);
@@ -103,7 +103,7 @@ char* decimal_to_hex_string_bigint(const char* decimal_str) {
        return NULL;
     }
 
-    int hex_pos = 0;
+    size_t hex_pos = 0;
     while (strlen(temp_dec) > 0 && strcmp(temp_dec, "0") != 0) {
        int remainder = divide_string_by_16(temp_dec);
        strip_leading_zeros(temp_dec);
@@ -112,14 +112,14 @@ char* decimal_to_hex_string_bigint(const char* decimal_str) {
        if (remainder < 10) {
           hex_str[hex_pos++] = remainder + '0';      // 0-9 ascii 48-57 dec
        } else {
-          hex_str[hex_pos++] = remainder - 10 + 'a'; // a-f ascii 97-102 dec 
+          hex_str[hex_pos++] = remainder - 10 + 'a'; // a-f ascii 97-102 dec
        }
     }
     hex_str[hex_pos] = '\0';
     free(temp_dec);
 
     // The hex string is generated in reverse order, so we need to reverse it.
-    for (int i = 0; i < (hex_pos >> 1); ++i) {
+    for (size_t i = 0; i < (hex_pos >> 1); ++i) {
        char temp = hex_str[i];
        hex_str[i] = hex_str[hex_pos - 1 - i];
        hex_str[hex_pos - 1 - i] = temp;
