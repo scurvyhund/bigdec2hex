@@ -1,9 +1,10 @@
-# final-d2h
+# bigdec2hex — Arbitrary-Precision Decimal to Hexadecimal Converter
 
-A command-line utility that converts arbitrarily large decimal integers to
-hexadecimal. Unlike converters that rely on the platform's native integer
-types, `final-d2h` uses string arithmetic (repeated division by 16), so
-there is no compiled-in upper limit on input size.
+A command-line utility that converts arbitrarily large decimal integers
+to hexadecimal. Unlike converters that rely on the platform's native
+integer types, `bigdec2hex` (`final-d2h`) uses string arithmetic
+(repeated division by 16), so there is no compiled-in upper limit on
+input size — it handles big integers well beyond 2^512.
 
 ## Build
 
@@ -74,6 +75,20 @@ decimal using Python's `int(hex, 16)`. Requires Python 3.
 10,000 random values in `[0, 2^512]` have been verified: 10,000 passed,
 0 failed. Correctness beyond 2^512 is expected from the algorithm but has
 not been tested.
+
+## Related projects
+
+Big integer conversion is part of the same family of arbitrary-precision
+tools in the BigFermat project:
+
+- [bi-quad](https://github.com/scurvyhund/bi-quad) — exhaustive hunt for
+  bi-quadratic emirps and prime palindromes on the curve 2n²+2n+1; the
+  prime search that motivates this toolset.
+- [bigint-mul](https://github.com/scurvyhund/bigint-mul) — arbitrary-
+  precision big integer multiplication in C; schoolbook string arithmetic
+  and 256-bit `__uint128_t` approaches.
+
+---
 
 ## Author
 
