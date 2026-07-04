@@ -1,6 +1,6 @@
 CC     = gcc
-TARGET = final-d2h
-SRC    = final-d2h.c
+TARGET = dec2base
+SRC    = dec2base.c
 
 CFLAGS_DEBUG   = -Wall -gdwarf-5 -std=c99 -m64 -O0
 CFLAGS_RELEASE = -Wall -std=c99 -m64 -O2

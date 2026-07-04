@@ -1,11 +1,12 @@
 # build output
+dec2base
 final-d2h
 final-test
 test-loop
 wc
 
 # generated test logs
-test-d2h-*.log
+test-*.log
 
 # personal / local files
 scott-email.docx

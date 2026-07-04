@@ -1,13 +1,14 @@
 #!/bin/bash
-# d2h Test Harness
+# dec2base Test Harness
 #
 # This script:
 # 1. Generates 10000 random integers from 0 to 2^512
-# 2. Converts them to hex using d2h
-# 3. Validates by converting back to decimal using Python
+# 2. Converts them to hex and binary using dec2base
+# 3. Validates BOTH outputs by converting back to decimal with Python
+#    (int(hex,16) and int(bin,2))
 # 4. Reports pass/fail with colorful output
 #
-# Usage: ./test-d2h.sh [options]
+# Usage: ./test-dec2base.sh [options]
 #
 # Options:
 #   -n <count>     Number of tests to run (default: 10000)
@@ -21,7 +22,7 @@ set -e  # Exit on error
 TEST_COUNT=10000
 SEED=$(date +%s)
 VERBOSE=0
-D2H_TOOL="./final-d2h"
+TOOL="./dec2base"
 
 # Colors for output
 RED='\033[0;31m'
@@ -56,15 +57,15 @@ while getopts "n:s:vh" opt; do
   esac
 done
 
-# Check if d2h exists
+# Check if the tool exists
 check_tool() {
     if [ ! -f "$1" ]; then
         echo -e "${RED}Error: $1 not found!${NC}"
-        echo "Please ensure d2h is compiled and in the current directory."
+        echo "Please ensure dec2base is compiled and in this directory."
         exit 1
     fi
     if [ ! -x "$1" ]; then
-        echo -e "${YELLOW}Warning: $1 is not executable. Attempting to make it executable...${NC}"
+        echo -e "${YELLOW}Warning: $1 is not executable. Fixing...${NC}"
         chmod +x "$1" || {
             echo -e "${RED}Error: Could not make $1 executable${NC}"
             exit 1
@@ -74,37 +75,34 @@ check_tool() {
 
 # Generate a random number from 0 to 2^512
 generate_random_bigint() {
-    python3 -c "import random; random.seed($SEED + $1); print(random.randint(0, 2**512))"
+    python3 -c "import random; random.seed($SEED + $1); \
+print(random.randint(0, 2**512))"
 }
 
-# Validate hex conversion
-validate_hex() {
-    local decimal="$1"
-    local hex="$2"
-    
-    # Convert hex back to decimal using Python
-    local result=$(python3 -c "print(int('$hex', 16))")
-    
-    if [ "$decimal" == "$result" ]; then
-        return 0
-    else
-        return 1
-    fi
+# Extract the pure hex digits from the "Hex:" block (stops at "Bin:").
+extract_hex() {
+    echo "$1" | sed -n '/Hex:/,/Bin:/p' \
+        | sed 's/Hex://; s/Bin://' | tr -d ' \n\r'
+}
+
+# Extract the pure binary digits from the "Bin:" block (to end of output).
+extract_bin() {
+    echo "$1" | sed -n '/Bin:/,$p' | sed 's/Bin://' | tr -d ' \n\r'
 }
 
 # Create log file
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-LOGFILE="test-d2h-${TIMESTAMP}.log"
+LOGFILE="test-dec2base-${TIMESTAMP}.log"
 
 echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║         d2h Test Harness v1.0             ║${NC}"
-echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
+echo -e "${CYAN}║        dec2base Test Harness v1.0          ║${NC}"
+echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
 echo ""
 
 # Check for required tools
 echo -e "${BLUE}Checking required tools...${NC}"
-check_tool "$D2H_TOOL"
-echo -e "${GREEN}✓ d2h found and executable${NC}"
+check_tool "$TOOL"
+echo -e "${GREEN}✓ dec2base found and executable${NC}"
 
 # Check Python
 if ! command -v python3 &> /dev/null; then
@@ -120,7 +118,8 @@ echo -e "  Tests:       ${CYAN}$TEST_COUNT${NC}"
 echo -e "  Range:       ${CYAN}0 to 2^512${NC}"
 echo -e "  Seed:        ${CYAN}$SEED${NC}"
 echo -e "  Log file:    ${CYAN}$LOGFILE${NC}"
-echo -e "  Verbose:     ${CYAN}$([ $VERBOSE -eq 1 ] && echo 'Yes' || echo 'No')${NC}"
+echo -e "  Verbose:     ${CYAN}$([ $VERBOSE -eq 1 ] \
+&& echo 'Yes' || echo 'No')${NC}"
 echo ""
 
 # Start testing
@@ -131,7 +130,7 @@ echo ""
 
 # Write log header
 {
-    echo "d2h Test Results - $(date)"
+    echo "dec2base Test Results - $(date)"
     echo "Configuration: $TEST_COUNT tests, range 0 to 2^512, seed $SEED"
     echo "=================================================="
     echo ""
@@ -141,52 +140,52 @@ echo ""
 for i in $(seq 1 $TEST_COUNT); do
     # Generate random number
     DECIMAL=$(generate_random_bigint $i)
-    
-    # Convert to hex using d2h
-    HEX_RAW=$("$D2H_TOOL" "$DECIMAL" 2>/dev/null || echo "ERROR")
-    
-    # Strip formatting carefully: remove "Hex:", "0x", parentheses, spaces, and newlines
-    # but preserve all hex digits including zeros
-    HEX=$(echo "$HEX_RAW" | sed 's/Hex://g; s/0x//g; s/(//g; s/)//g; s/ //g' | tr -d '\n\r')
-    
-    if [ "$HEX" == "ERROR" ]; then
+
+    # Convert using dec2base
+    RAW=$("$TOOL" "$DECIMAL" 2>/dev/null || echo "ERROR")
+
+    if [ "$RAW" == "ERROR" ]; then
         SKIP_COUNT=$((SKIP_COUNT + 1))
-        echo -e "Test $i/${TEST_COUNT}: ${YELLOW}SKIP${NC} (d2h error)"
-        echo "Test $i: SKIP - d2h returned error for input: $DECIMAL" >> "$LOGFILE"
+        echo -e "Test $i/${TEST_COUNT}: ${YELLOW}SKIP${NC} (dec2base error)"
+        echo "Test $i: SKIP - error for input: $DECIMAL" >> "$LOGFILE"
         continue
     fi
-    
-    # Validate the conversion
-    if validate_hex "$DECIMAL" "$HEX"; then
+
+    # Strip formatting to pure digits for each base
+    HEX=$(extract_hex "$RAW")
+    BIN=$(extract_bin "$RAW")
+
+    # Validate both conversions against Python
+    HEX_DEC=$(python3 -c "print(int('$HEX', 16))")
+    BIN_DEC=$(python3 -c "print(int('$BIN', 2))")
+
+    if [ "$DECIMAL" == "$HEX_DEC" ] && [ "$DECIMAL" == "$BIN_DEC" ]; then
         PASS_COUNT=$((PASS_COUNT + 1))
-        
+
         if [ $VERBOSE -eq 1 ]; then
             echo -e "Test $i/${TEST_COUNT}: ${GREEN}PASS${NC}"
-            echo -e "  Dec: ${CYAN}${DECIMAL:0:50}$([ ${#DECIMAL} -gt 50 ] && echo '...')${NC}"
-            echo -e "  Raw: ${CYAN}${HEX_RAW}${NC}"
+            echo -e "  Dec: ${CYAN}${DECIMAL:0:50}\
+$([ ${#DECIMAL} -gt 50 ] && echo '...')${NC}"
             echo -e "  Hex: ${CYAN}${HEX}${NC}"
+            echo -e "  Bin: ${CYAN}${BIN}${NC}"
         elif [ $((i % 100)) -eq 0 ]; then
-            echo -e "Progress: $i/${TEST_COUNT} tests completed... [${GREEN}✓ $PASS_COUNT${NC}]"
+            echo -e "Progress: $i/${TEST_COUNT} tests... \
+[${GREEN}✓ $PASS_COUNT${NC}]"
         fi
-        
-        echo "Test $i: PASS - $DECIMAL -> $HEX" >> "$LOGFILE"
+
+        echo "Test $i: PASS - $DECIMAL" >> "$LOGFILE"
     else
         FAIL_COUNT=$((FAIL_COUNT + 1))
         echo -e "Test $i/${TEST_COUNT}: ${RED}FAIL${NC}"
         echo -e "  Dec: ${CYAN}$DECIMAL${NC}"
-        echo -e "  Raw: ${RED}$HEX_RAW${NC}"
-        echo -e "  Got: ${RED}$HEX${NC}"
-        
-        # Verify what the hex should be
-        EXPECTED=$(python3 -c "print(hex($DECIMAL)[2:])")
-        echo -e "  Expected: ${GREEN}$EXPECTED${NC}"
-        
+        echo -e "  Hex->dec: ${RED}$HEX_DEC${NC}"
+        echo -e "  Bin->dec: ${RED}$BIN_DEC${NC}"
+
         {
             echo "Test $i: FAIL"
             echo "  Decimal:  $DECIMAL"
-            echo "  Raw:      $HEX_RAW"
-            echo "  Got:      $HEX"
-            echo "  Expected: $EXPECTED"
+            echo "  Hex:      $HEX  (-> $HEX_DEC)"
+            echo "  Bin:      $BIN  (-> $BIN_DEC)"
             echo ""
         } >> "$LOGFILE"
     fi
@@ -204,7 +203,8 @@ echo ""
 
 # Calculate percentage
 if [ $TEST_COUNT -gt 0 ]; then
-    PASS_PERCENT=$(python3 -c "print(f'{($PASS_COUNT / $TEST_COUNT * 100):.2f}')")
+    PASS_PERCENT=$(python3 -c \
+"print(f'{($PASS_COUNT / $TEST_COUNT * 100):.2f}')")
     echo -e "${CYAN}Success Rate: ${PASS_PERCENT}%${NC}"
 fi
 

@@ -1,10 +1,12 @@
-# bigdec2hex — Arbitrary-Precision Decimal to Hexadecimal Converter
+# dec2base — Arbitrary-Precision Decimal to Hex & Binary Converter
 
 A command-line utility that converts arbitrarily large decimal integers
-to hexadecimal. Unlike converters that rely on the platform's native
-integer types, `bigdec2hex` (`final-d2h`) uses string arithmetic
+to **hexadecimal and binary**. Unlike converters that rely on the
+platform's native integer types, `dec2base` uses string arithmetic
 (repeated division by 16), so there is no compiled-in upper limit on
-input size — it handles big integers well beyond 2^512.
+input size — it handles big integers well beyond 2^512. Each hex digit
+expands to a 4-bit group, so the binary output shares the same unbounded
+range.
 
 ## Build
 
@@ -18,29 +20,44 @@ Requires gcc and a C99-capable toolchain.
 ## Usage
 
 ```
-./final-d2h <decimal_integer>
+./dec2base <decimal_integer>
 ```
 
-Output is formatted with a `Hex:` label, leading-zero padding to the
-nearest 4-digit boundary, and spaces every 4 digits for readability.
+Output shows the value under a `Hex:` label and a `Bin:` label, with
+leading-zero padding to the nearest 4-digit boundary and a space every
+4 digits. Both bases wrap at 16 groups (79 columns) per line so large
+values stay within an 80-column terminal or printout.
 
 ### Examples
 
 ```
-$> ./final-d2h 255
-Hex: (00ff)
+$> ./dec2base 255
 
-$> ./final-d2h 65535
-Hex: (ffff)
+Hex:
+00ff
 
-$> ./final-d2h 4294967296
-Hex: (0001 0000 0000)
+Bin:
+1111 1111
 
-$> ./final-d2h 13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006084096
-Hex: (0001 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000)
+$> ./dec2base 65535
+
+Hex:
+ffff
+
+Bin:
+1111 1111 1111 1111
+
+$> ./dec2base 4294967296
+
+Hex:
+0001 0000 0000
+
+Bin:
+0001 0000 0000 0000 0000 0000 0000 0000 0000
 ```
 
-That last value is 2^512.
+For a large value such as 2^512, the hex and binary blocks each wrap
+across multiple 79-column lines, column-aligned with one another.
 
 ## Input rules
 
@@ -52,25 +69,27 @@ That last value is 2^512.
 
 The conversion uses long division of the decimal string by 16, collecting
 remainders to build the hex digits from least significant to most
-significant, then reversing. Each division pass is O(n) in the number of
-decimal digits; the full conversion is O(n²). For the input sizes this tool
-is intended for — numbers up to and beyond 2^512 — this is fast enough to
-be imperceptible.
+significant, then reversing. The binary output is derived from the hex
+string by expanding each hex digit to its 4-bit group via a lookup table.
+Each division pass is O(n) in the number of decimal digits; the full
+conversion is O(n²). For the input sizes this tool is intended for —
+numbers up to and beyond 2^512 — this is fast enough to be imperceptible.
 
 ## Testing
 
 A bash test harness is included:
 
 ```
-./test-final-d2h.sh              # 10,000 tests, random seed
-./test-final-d2h.sh -n 1000      # fewer tests
-./test-final-d2h.sh -s 42        # fixed seed (reproducible)
-./test-final-d2h.sh -v           # verbose output
+./test-dec2base.sh              # 10,000 tests, random seed
+./test-dec2base.sh -n 1000      # fewer tests
+./test-dec2base.sh -s 42        # fixed seed (reproducible)
+./test-dec2base.sh -v           # verbose output
 ```
 
 The harness generates random integers in `[0, 2^512]`, runs them through
-`final-d2h`, and validates each result by converting the hex output back to
-decimal using Python's `int(hex, 16)`. Requires Python 3.
+`dec2base`, and validates **both** outputs by converting the hex back to
+decimal with Python's `int(hex, 16)` and the binary with `int(bin, 2)`.
+Requires Python 3.
 
 10,000 random values in `[0, 2^512]` have been verified: 10,000 passed,
 0 failed. Correctness beyond 2^512 is expected from the algorithm but has
