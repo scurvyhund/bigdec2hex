@@ -1,14 +1,16 @@
 # Language classification (GitHub Linguist).
 #
-# This is a C project, but the test harness is larger than the program
-# (test-final-d2h.sh ~7.0 KB vs final-d2h.c ~6.0 KB) and Linguist
-# classifies by byte count -- so the repo was being reported as Shell
-# and did not appear under `language:c`.
+# Linguist classifies by byte count, and the test harness is comparable
+# in size to the program (test-dec2base.sh ~7.0 KB vs dec2base.c
+# ~8.9 KB). When the script was the larger of the two the repo was
+# reported as Shell and did not appear under `language:c` -- the most
+# likely way someone looks for a C big-integer converter.
 #
-# Marking the test script as not detectable leaves C as the primary
-# language. The script is still syntax-highlighted as Shell.
+# Marking the test script as not detectable pins C as the primary
+# language regardless of how the two files grow. The script is still
+# syntax-highlighted as Shell.
 
-test-final-d2h.sh linguist-detectable=false
+test-dec2base.sh linguist-detectable=false
 
 *.c linguist-language=C
 *.h linguist-language=C
