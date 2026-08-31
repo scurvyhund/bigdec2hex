@@ -1,3 +1,6 @@
+# Line endings: normalize to LF in the repo, checkout native.
+* text=auto
+
 # Language classification (GitHub Linguist).
 #
 # Linguist classifies by byte count, and the test harness is comparable
