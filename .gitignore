@@ -18,3 +18,9 @@ test-loop.c
 *.png
 *.pdf
 tags
+
+# scratch / strays (kept on disk, not part of this program)
+conversion.txt      # ELF hexdump diff, final-d2h vs dec2base
+itob.s              # x86-64 int->binary routine, not built here
+d2base.txt          # snapshot of d2base_dev's source, not this one
+mul128_h.txt        # corrected bin_str table, belongs to d2base_dev
